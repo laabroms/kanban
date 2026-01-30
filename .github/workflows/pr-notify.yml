@@ -18,6 +18,8 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           REVIEWER: ${{ github.event.review.user.login }}
           REVIEW_BODY: ${{ github.event.review.body }}
+          WEBHOOK_URL: ${{ secrets.CLAWDBOT_WEBHOOK_URL }}
+          HOOK_TOKEN: ${{ secrets.CLAWDBOT_HOOK_TOKEN }}
         run: |
           if [ "$REVIEW_STATE" = "approved" ]; then
             ACTION="APPROVED"
@@ -29,10 +31,16 @@ jobs:
           
           MESSAGE="PR #${PR_NUMBER} ${ACTION} by ${REVIEWER}. Title: ${PR_TITLE}. ${REVIEW_BODY:+Review comment: ${REVIEW_BODY}} If approved, merge the PR. If changes requested or commented, check for new comments and address them."
           
-          curl -s -X POST "${{ secrets.CLAWDBOT_WEBHOOK_URL }}/hooks/agent" \
-            -H "Authorization: Bearer ${{ secrets.CLAWDBOT_HOOK_TOKEN }}" \
+          # Use jq to safely build JSON with proper escaping
+          JSON_PAYLOAD=$(jq -n \
+            --arg message "$MESSAGE" \
+            --arg sessionKey "hook:github:pr-${PR_NUMBER}" \
+            '{message: $message, name: "GitHub", sessionKey: $sessionKey, deliver: false, model: "anthropic/claude-sonnet-4-5"}')
+          
+          curl -s -X POST "${WEBHOOK_URL}/hooks/agent" \
+            -H "Authorization: Bearer ${HOOK_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"message\": \"$MESSAGE\", \"name\": \"GitHub\", \"sessionKey\": \"hook:github:pr-${PR_NUMBER}\", \"deliver\": false, \"model\": \"anthropic/claude-sonnet-4-5\"}"
+            -d "$JSON_PAYLOAD"
 
       - name: Notify Clawdbot on Review Comment
         if: github.event_name == 'pull_request_review_comment'
@@ -42,10 +50,18 @@ jobs:
           COMMENTER: ${{ github.event.comment.user.login }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           FILE_PATH: ${{ github.event.comment.path }}
+          WEBHOOK_URL: ${{ secrets.CLAWDBOT_WEBHOOK_URL }}
+          HOOK_TOKEN: ${{ secrets.CLAWDBOT_HOOK_TOKEN }}
         run: |
           MESSAGE="New review comment on PR #${PR_NUMBER} (${PR_TITLE}) by ${COMMENTER} on file ${FILE_PATH}: ${COMMENT_BODY}. Please address this comment and push a fix."
           
-          curl -s -X POST "${{ secrets.CLAWDBOT_WEBHOOK_URL }}/hooks/agent" \
-            -H "Authorization: Bearer ${{ secrets.CLAWDBOT_HOOK_TOKEN }}" \
+          # Use jq to safely build JSON with proper escaping
+          JSON_PAYLOAD=$(jq -n \
+            --arg message "$MESSAGE" \
+            --arg sessionKey "hook:github:pr-${PR_NUMBER}" \
+            '{message: $message, name: "GitHub", sessionKey: $sessionKey, deliver: false, model: "anthropic/claude-sonnet-4-5"}')
+          
+          curl -s -X POST "${WEBHOOK_URL}/hooks/agent" \
+            -H "Authorization: Bearer ${HOOK_TOKEN}" \
             -H "Content-Type: application/json" \
-            -d "{\"message\": \"$MESSAGE\", \"name\": \"GitHub\", \"sessionKey\": \"hook:github:pr-${PR_NUMBER}\", \"deliver\": false, \"model\": \"anthropic/claude-sonnet-4-5\"}"
+            -d "$JSON_PAYLOAD"
