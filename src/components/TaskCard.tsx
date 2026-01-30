@@ -2,12 +2,13 @@
 
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Task, Priority } from '@/types';
+import { Task, Priority, Epic } from '@/types';
 
 interface TaskCardProps {
   task: Task;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  epics?: Epic[];
 }
 
 const priorityColors: Record<Priority, string> = {
@@ -22,7 +23,8 @@ const priorityLabels: Record<Priority, string> = {
   high: 'High',
 };
 
-export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onDelete, epics = [] }: TaskCardProps) {
+  const epic = task.epicId ? epics.find(e => e.id === task.epicId) : null;
   const {
     attributes,
     listeners,
@@ -60,6 +62,21 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
           {priorityLabels[task.priority]}
         </span>
       </div>
+      
+      {epic && (
+        <div className="mt-2">
+          <span
+            className="text-xs px-2 py-0.5 rounded-full"
+            style={{ 
+              backgroundColor: `${epic.color}20`,
+              color: epic.color,
+              border: `1px solid ${epic.color}40`
+            }}
+          >
+            {epic.name}
+          </span>
+        </div>
+      )}
       
       {task.description && (
         <p className="text-xs text-zinc-400 mt-2 line-clamp-2">

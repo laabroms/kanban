@@ -170,6 +170,7 @@ export function KanbanBoard() {
                 key={column.id}
                 column={column}
                 tasks={getTasksByColumn(column.id)}
+                epics={epics}
                 onEditTask={handleEditTask}
                 onDeleteTask={handleDeleteTask}
                 onAddTask={handleAddTask}

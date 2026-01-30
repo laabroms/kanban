@@ -2,12 +2,13 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { Column as ColumnType, Task } from '@/types';
+import { Column as ColumnType, Task, Epic } from '@/types';
 import { TaskCard } from './TaskCard';
 
 interface ColumnProps {
   column: ColumnType;
   tasks: Task[];
+  epics?: Epic[];
   onEditTask: (task: Task) => void;
   onDeleteTask: (id: string) => void;
   onAddTask: (columnId: string) => void;
@@ -20,7 +21,7 @@ const columnColors: Record<string, string> = {
   'done': 'border-t-green-500',
 };
 
-export function Column({ column, tasks, onEditTask, onDeleteTask, onAddTask }: ColumnProps) {
+export function Column({ column, tasks, epics = [], onEditTask, onDeleteTask, onAddTask }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -55,6 +56,7 @@ export function Column({ column, tasks, onEditTask, onDeleteTask, onAddTask }: C
             <TaskCard
               key={task.id}
               task={task}
+              epics={epics}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
             />
