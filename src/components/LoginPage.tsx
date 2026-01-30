@@ -100,13 +100,14 @@ export function LoginPage({ onSuccess, needsSetup }: LoginPageProps) {
             <input
               key={index}
               ref={el => { inputRefs.current[index] = el; }}
-              type="text"
+              type="password"
               inputMode="numeric"
               maxLength={1}
               value={digit}
               onChange={e => handleInput(index, e.target.value)}
               onKeyDown={e => handleKeyDown(index, e)}
               disabled={loading}
+              autoComplete="off"
               className={`
                 w-12 h-14 text-center text-2xl font-mono
                 bg-zinc-900 border-2 rounded-lg

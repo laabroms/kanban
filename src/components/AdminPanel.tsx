@@ -170,11 +170,13 @@ export function AdminPanel({ onClose }: AdminPanelProps) {
               <div>
                 <label className="block text-sm text-zinc-400 mb-1">6-Digit Passcode</label>
                 <input
-                  type="text"
+                  type="password"
+                  inputMode="numeric"
                   value={newCode}
                   onChange={e => setNewCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
+                  placeholder="••••••"
                   maxLength={6}
+                  autoComplete="off"
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2
                              text-zinc-100 font-mono tracking-widest focus:outline-none focus:border-blue-500"
                   required
