@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { tasks } from '@/db/schema';
+import { sendWebhook } from '@/lib/webhook';
 
 // GET all tasks
 export async function GET() {
@@ -31,6 +32,15 @@ export async function POST(request: NextRequest) {
       priority: priority || 'medium',
       columnId: columnId || 'backlog',
     }).returning();
+
+    // Send webhook notification
+    await sendWebhook('task.created', {
+      id: newTask.id,
+      title: newTask.title,
+      description: newTask.description,
+      priority: newTask.priority,
+      columnId: newTask.columnId,
+    });
 
     return NextResponse.json(newTask, { status: 201 });
   } catch (error) {

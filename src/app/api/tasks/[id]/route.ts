@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { tasks } from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { sendWebhook } from '@/lib/webhook';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -31,6 +32,12 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { title, description, priority, columnId } = body;
 
+    // Get current task for comparison
+    const [currentTask] = await db.select().from(tasks).where(eq(tasks.id, id));
+    if (!currentTask) {
+      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
+    }
+
     const updateData: Record<string, unknown> = {};
     if (title !== undefined) updateData.title = title;
     if (description !== undefined) updateData.description = description;
@@ -43,9 +50,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .where(eq(tasks.id, id))
       .returning();
 
-    if (!updatedTask) {
-      return NextResponse.json({ error: 'Task not found' }, { status: 404 });
-    }
+    // Send webhook - detect if it's a move or general update
+    const isMove = columnId !== undefined && columnId !== currentTask.columnId;
+    await sendWebhook(
+      isMove ? 'task.moved' : 'task.updated',
+      {
+        id: updatedTask.id,
+        title: updatedTask.title,
+        description: updatedTask.description,
+        priority: updatedTask.priority,
+        columnId: updatedTask.columnId,
+      },
+      isMove ? { from: currentTask.columnId, to: columnId } : undefined
+    );
 
     return NextResponse.json(updatedTask);
   } catch (error) {
@@ -67,6 +84,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     if (!deletedTask) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
+
+    // Send webhook notification
+    await sendWebhook('task.deleted', {
+      id: deletedTask.id,
+      title: deletedTask.title,
+      description: deletedTask.description,
+      priority: deletedTask.priority,
+      columnId: deletedTask.columnId,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
