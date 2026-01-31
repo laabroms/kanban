@@ -7,11 +7,12 @@ interface TaskDetailViewProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit: () => void;
+  onDelete: (id: string) => void;
   task: Task;
   epic?: Epic | null;
 }
 
-export function TaskDetailView({ isOpen, onClose, onEdit, task, epic }: TaskDetailViewProps) {
+export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }: TaskDetailViewProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [authorName, setAuthorName] = useState('');
@@ -168,6 +169,15 @@ export function TaskDetailView({ isOpen, onClose, onEdit, task, epic }: TaskDeta
               className="px-3 py-1.5 text-sm font-medium rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
             >
               Edit
+            </button>
+            <button
+              onClick={() => {
+                onClose();
+                onDelete(task.id);
+              }}
+              className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 transition-colors"
+            >
+              Delete
             </button>
             <button
               onClick={onClose}
