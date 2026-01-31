@@ -6,6 +6,7 @@ import { Task, Priority, Epic } from '@/types';
 
 interface TaskCardProps {
   task: Task;
+  onView: (task: Task) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
   epics?: Epic[];
@@ -23,7 +24,7 @@ const priorityLabels: Record<Priority, string> = {
   high: 'High',
 };
 
-export function TaskCard({ task, onEdit, onDelete, epics = [] }: TaskCardProps) {
+export function TaskCard({ task, onView, onEdit, onDelete, epics = [] }: TaskCardProps) {
   const epic = task.epicId ? epics.find(e => e.id === task.epicId) : null;
   const {
     attributes,
@@ -85,6 +86,15 @@ export function TaskCard({ task, onEdit, onDelete, epics = [] }: TaskCardProps) 
       )}
       
       <div className="flex gap-2 mt-3 pt-2 border-t border-zinc-700/50">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(task);
+          }}
+          className="text-xs text-zinc-500 hover:text-blue-400 transition-colors"
+        >
+          View
+        </button>
         <button
           onClick={(e) => {
             e.stopPropagation();

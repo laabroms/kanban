@@ -17,6 +17,7 @@ import { useEpics } from '@/hooks/useEpics';
 import { Column } from './Column';
 import { TaskCard } from './TaskCard';
 import { TaskModal } from './TaskModal';
+import { TaskDetailView } from './TaskDetailView';
 import { EpicSelector } from './EpicSelector';
 import { useToast } from './Toast';
 
@@ -26,6 +27,8 @@ export function KanbanBoard() {
   const { showToast } = useToast();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [viewingTask, setViewingTask] = useState<Task | null>(null);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultColumnId, setDefaultColumnId] = useState<ColumnId>('backlog');
   const [selectedEpicId, setSelectedEpicId] = useState<string | null>(null);
@@ -81,10 +84,22 @@ export function KanbanBoard() {
     setIsModalOpen(true);
   };
 
+  const handleViewTask = (task: Task) => {
+    setViewingTask(task);
+    setIsDetailOpen(true);
+  };
+
   const handleEditTask = (task: Task) => {
     setEditingTask(task);
     setDefaultColumnId(task.columnId);
     setIsModalOpen(true);
+  };
+
+  const handleEditFromDetail = () => {
+    if (viewingTask) {
+      setIsDetailOpen(false);
+      handleEditTask(viewingTask);
+    }
   };
 
   const handleDeleteTask = async (id: string) => {
@@ -126,6 +141,11 @@ export function KanbanBoard() {
       </div>
     );
   }
+
+  // Get the epic for the viewing task
+  const viewingTaskEpic = viewingTask?.epicId 
+    ? epics.find(e => e.id === viewingTask.epicId) 
+    : null;
 
   return (
     <div className="min-h-screen bg-zinc-950 p-6 pt-16">
@@ -171,6 +191,7 @@ export function KanbanBoard() {
                 column={column}
                 tasks={getTasksByColumn(column.id)}
                 epics={epics}
+                onViewTask={handleViewTask}
                 onEditTask={handleEditTask}
                 onDeleteTask={handleDeleteTask}
                 onAddTask={handleAddTask}
@@ -183,6 +204,7 @@ export function KanbanBoard() {
             <div className="rotate-3 opacity-90">
               <TaskCard
                 task={activeTask}
+                onView={() => {}}
                 onEdit={() => {}}
                 onDelete={() => {}}
               />
@@ -203,6 +225,19 @@ export function KanbanBoard() {
         epics={epics}
         defaultEpicId={selectedEpicId}
       />
+
+      {viewingTask && (
+        <TaskDetailView
+          isOpen={isDetailOpen}
+          onClose={() => {
+            setIsDetailOpen(false);
+            setViewingTask(null);
+          }}
+          onEdit={handleEditFromDetail}
+          task={viewingTask}
+          epic={viewingTaskEpic}
+        />
+      )}
     </div>
   );
 }

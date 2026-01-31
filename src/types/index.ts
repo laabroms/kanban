@@ -17,7 +17,16 @@ export interface Task {
   priority: Priority;
   columnId: ColumnId;
   epicId?: string | null;
+  prUrl?: string | null;
   createdAt: number;
+}
+
+export interface Comment {
+  id: string;
+  taskId: string;
+  content: string;
+  author: string;
+  createdAt: string;
 }
 
 export interface Column {

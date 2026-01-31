@@ -9,6 +9,7 @@ interface ColumnProps {
   column: ColumnType;
   tasks: Task[];
   epics?: Epic[];
+  onViewTask: (task: Task) => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (id: string) => void;
   onAddTask: (columnId: string) => void;
@@ -21,7 +22,7 @@ const columnColors: Record<string, string> = {
   'done': 'border-t-green-500',
 };
 
-export function Column({ column, tasks, epics = [], onEditTask, onDeleteTask, onAddTask }: ColumnProps) {
+export function Column({ column, tasks, epics = [], onViewTask, onEditTask, onDeleteTask, onAddTask }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
   });
@@ -57,6 +58,7 @@ export function Column({ column, tasks, epics = [], onEditTask, onDeleteTask, on
               key={task.id}
               task={task}
               epics={epics}
+              onView={onViewTask}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
             />
