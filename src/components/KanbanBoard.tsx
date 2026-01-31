@@ -234,6 +234,7 @@ export function KanbanBoard() {
             setViewingTask(null);
           }}
           onEdit={handleEditFromDetail}
+          onDelete={handleDeleteTask}
           task={viewingTask}
           epic={viewingTaskEpic}
         />
