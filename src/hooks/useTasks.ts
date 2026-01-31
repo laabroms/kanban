@@ -22,6 +22,7 @@ export function useTasks() {
           priority: t.priority as Priority,
           columnId: t.columnId as ColumnId,
           epicId: t.epicId as string | null | undefined,
+          prUrl: t.prUrl as string | null | undefined,
           createdAt: new Date(t.createdAt as string).getTime(),
         })));
       } catch (err) {
@@ -56,6 +57,7 @@ export function useTasks() {
         priority: newTask.priority,
         columnId: newTask.columnId,
         epicId: newTask.epicId,
+        prUrl: newTask.prUrl,
         createdAt: new Date(newTask.createdAt).getTime(),
       }]);
       return newTask;

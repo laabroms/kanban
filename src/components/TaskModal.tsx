@@ -6,7 +6,7 @@ import { Task, Priority, ColumnId, Epic } from '@/types';
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null) => void;
+  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null) => void;
   task?: Task | null;
   defaultColumnId?: ColumnId;
   epics?: Epic[];
@@ -18,6 +18,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<Priority>('medium');
   const [epicId, setEpicId] = useState<string | null>(null);
+  const [prUrl, setPrUrl] = useState('');
   
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -29,11 +30,13 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
       setDescription(task.description || '');
       setPriority(task.priority);
       setEpicId(task.epicId || null);
+      setPrUrl(task.prUrl || '');
     } else {
       setTitle('');
       setDescription('');
       setPriority('medium');
       setEpicId(defaultEpicId || null);
+      setPrUrl('');
     }
   }, [task, isOpen, defaultEpicId]);
 
@@ -101,7 +104,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId);
+    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null);
     onClose();
   };
 
@@ -186,6 +189,21 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
               </select>
             </div>
           )}
+
+          <div>
+            <label htmlFor="task-pr-url" className="block text-sm text-zinc-400 mb-1">
+              Pull Request URL (optional)
+            </label>
+            <input
+              id="task-pr-url"
+              type="url"
+              value={prUrl}
+              onChange={e => setPrUrl(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2
+                         text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              placeholder="https://github.com/..."
+            />
+          </div>
           
           <fieldset>
             <legend className="block text-sm text-zinc-400 mb-2">Priority</legend>
