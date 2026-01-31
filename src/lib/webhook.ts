@@ -8,6 +8,7 @@ interface TaskData {
   description?: string | null;
   priority: string;
   columnId: string;
+  epicId?: string | null;
 }
 
 interface WebhookPayload {
@@ -41,6 +42,73 @@ function formatTelegramMessage(event: WebhookEvent, task: TaskData, changes?: We
       return `🗑️ *Task Deleted*\n\n~${task.title}~`;
     default:
       return `📝 Task event: ${event}\n${task.title}`;
+  }
+}
+
+// Format message for Clawdbot agent
+function formatClawdbotMessage(event: WebhookEvent, task: TaskData, changes?: WebhookPayload['changes']): string {
+  const priorityLabel = { low: 'Low', medium: 'Medium', high: 'High' }[task.priority] || task.priority;
+  
+  switch (event) {
+    case 'task.created':
+      return `New Kanban task created: "${task.title}"${task.description ? ` - ${task.description}` : ''}. Priority: ${priorityLabel}. Column: ${task.columnId}. Please pick up this task if appropriate based on priority and your current workload.`;
+    case 'task.moved':
+      if (changes?.to === 'backlog' || changes?.to === 'ready') {
+        return `Task "${task.title}" moved to ${changes.to}. This task is now available to pick up.`;
+      }
+      return `Task "${task.title}" moved from ${changes?.from} to ${changes?.to}.`;
+    case 'task.updated':
+      return `Task "${task.title}" was updated. Priority: ${priorityLabel}. Column: ${task.columnId}.`;
+    case 'task.deleted':
+      return `Task "${task.title}" was deleted from the Kanban board.`;
+    default:
+      return `Kanban event: ${event} for task "${task.title}"`;
+  }
+}
+
+// Send notification to Clawdbot via /hooks/agent endpoint
+async function sendClawdbotNotification(event: WebhookEvent, task: TaskData, changes?: WebhookPayload['changes']) {
+  const clawdbotUrl = process.env.CLAWDBOT_WEBHOOK_URL;
+  const clawdbotToken = process.env.CLAWDBOT_HOOK_TOKEN;
+
+  if (!clawdbotUrl || !clawdbotToken) {
+    console.log('Clawdbot not configured, skipping notification');
+    return;
+  }
+
+  // Skip notifications for tasks moved to 'done' (bot already handled it)
+  // and for tasks moved to 'in-progress' (bot is already working on it)
+  if (event === 'task.moved' && (changes?.to === 'done' || changes?.to === 'in-progress')) {
+    console.log(`Skipping Clawdbot notification for task moved to ${changes?.to}`);
+    return;
+  }
+
+  const message = formatClawdbotMessage(event, task, changes);
+
+  try {
+    const response = await fetch(`${clawdbotUrl}/hooks/agent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${clawdbotToken}`,
+      },
+      body: JSON.stringify({
+        message,
+        name: 'Kanban',
+        sessionKey: `hook:kanban:task-${task.id}`,
+        deliver: false, // Don't echo to chat, just process
+        model: 'anthropic/claude-sonnet-4-5',
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error(`Clawdbot notification failed: ${error}`);
+    } else {
+      console.log(`Clawdbot notification sent: ${event} for task ${task.id}`);
+    }
+  } catch (error) {
+    console.error('Clawdbot notification error:', error);
   }
 }
 
@@ -116,6 +184,9 @@ export async function sendWebhook(event: WebhookEvent, task: TaskData, changes?:
     }
   }
 
-  // Always try to send Telegram notification
+  // Send to Clawdbot if configured
+  await sendClawdbotNotification(event, task, changes);
+
+  // Send to Telegram if configured
   await sendTelegramNotification(event, task, changes);
 }
