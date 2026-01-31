@@ -118,11 +118,12 @@ export function KanbanBoard() {
     description: string,
     priority: Priority,
     columnId?: ColumnId,
-    epicId?: string | null
+    epicId?: string | null,
+    prUrl?: string | null
   ) => {
     try {
       if (editingTask) {
-        await updateTask(editingTask.id, { title, description, priority, epicId });
+        await updateTask(editingTask.id, { title, description, priority, epicId, prUrl });
         showToast('Task updated', 'success');
       } else {
         const taskEpicId = epicId !== undefined ? epicId : selectedEpicId;

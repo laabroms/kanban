@@ -64,8 +64,8 @@ export function TaskCard({ task, onView, onEdit, onDelete, epics = [] }: TaskCar
         </span>
       </div>
       
-      {epic && (
-        <div className="mt-2">
+      <div className="flex items-center gap-2 mt-2 flex-wrap">
+        {epic && (
           <span
             className="text-xs px-2 py-0.5 rounded-full"
             style={{ 
@@ -76,8 +76,23 @@ export function TaskCard({ task, onView, onEdit, onDelete, epics = [] }: TaskCar
           >
             {epic.name}
           </span>
-        </div>
-      )}
+        )}
+        {task.prUrl && (
+          <a
+            href={task.prUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/40 hover:bg-purple-500/30 transition-colors"
+            title="View Pull Request"
+          >
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M7.177 3.073L9.573.677A.25.25 0 0110 .854v4.792a.25.25 0 01-.427.177L7.177 3.427a.25.25 0 010-.354zM3.75 2.5a.75.75 0 100 1.5.75.75 0 000-1.5zm-2.25.75a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 011.5 3.25zM11 2.5h-1V4h1a1 1 0 011 1v5.628a2.251 2.251 0 101.5 0V5A2.5 2.5 0 0011 2.5zm1 10.25a.75.75 0 111.5 0 .75.75 0 01-1.5 0zM3.75 12a.75.75 0 100 1.5.75.75 0 000-1.5z"/>
+            </svg>
+            PR
+          </a>
+        )}
+      </div>
       
       {task.description && (
         <p className="text-xs text-zinc-400 mt-2 line-clamp-2">
