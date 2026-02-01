@@ -6,7 +6,7 @@ import { Task, Priority, ColumnId, Epic } from '@/types';
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null) => void;
+  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null, imageUrls?: string[]) => void;
   task?: Task | null;
   defaultColumnId?: ColumnId;
   epics?: Epic[];
@@ -19,9 +19,12 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const [priority, setPriority] = useState<Priority>('medium');
   const [epicId, setEpicId] = useState<string | null>(null);
   const [prUrl, setPrUrl] = useState('');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when task changes or modal opens
   useEffect(() => {
@@ -31,12 +34,14 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
       setPriority(task.priority);
       setEpicId(task.epicId || null);
       setPrUrl(task.prUrl || '');
+      setImageUrls(task.imageUrls || []);
     } else {
       setTitle('');
       setDescription('');
       setPriority('medium');
       setEpicId(defaultEpicId || null);
       setPrUrl('');
+      setImageUrls([]);
     }
   }, [task, isOpen, defaultEpicId]);
 
@@ -101,10 +106,50 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
 
   if (!isOpen) return null;
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          uploadedUrls.push(data.url);
+        } else {
+          console.error('Upload failed for', file.name);
+        }
+      }
+
+      setImageUrls([...imageUrls, ...uploadedUrls]);
+    } catch (error) {
+      console.error('Upload error:', error);
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = (urlToRemove: string) => {
+    setImageUrls(imageUrls.filter(url => url !== urlToRemove));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null);
+    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null, imageUrls);
     onClose();
   };
 
@@ -203,6 +248,53 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
                          text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="https://github.com/..."
             />
+          </div>
+
+          <div>
+            <label htmlFor="task-images" className="block text-sm text-zinc-400 mb-1">
+              Images (optional)
+            </label>
+            <input
+              ref={fileInputRef}
+              id="task-images"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              disabled={isUploading}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2
+                         text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                         file:mr-4 file:py-1 file:px-3 file:rounded file:border-0
+                         file:text-sm file:font-medium file:bg-blue-600 file:text-white
+                         file:hover:bg-blue-500 file:cursor-pointer
+                         disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            {isUploading && (
+              <p className="text-sm text-blue-400 mt-1">Uploading...</p>
+            )}
+            {imageUrls.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {imageUrls.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={url}
+                      alt={`Upload ${index + 1}`}
+                      className="w-20 h-20 object-cover rounded border border-zinc-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(url)}
+                      className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-5 h-5
+                                 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100
+                                 transition-opacity hover:bg-red-500"
+                      aria-label="Remove image"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           
           <fieldset>

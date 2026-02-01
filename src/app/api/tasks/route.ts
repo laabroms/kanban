@@ -8,7 +8,14 @@ export async function GET() {
   try {
     const db = getDb();
     const allTasks = await db.select().from(tasks).orderBy(tasks.createdAt);
-    return NextResponse.json(allTasks);
+    
+    // Parse imageUrls JSON for each task
+    const tasksWithParsedImages = allTasks.map(task => ({
+      ...task,
+      imageUrls: task.imageUrls ? JSON.parse(task.imageUrls) : [],
+    }));
+    
+    return NextResponse.json(tasksWithParsedImages);
   } catch (error) {
     console.error('Failed to fetch tasks:', error);
     return NextResponse.json({ error: 'Failed to fetch tasks' }, { status: 500 });
@@ -20,7 +27,7 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const body = await request.json();
-    const { title, description, priority, columnId, epicId } = body;
+    const { title, description, priority, columnId, epicId, imageUrls } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -32,6 +39,7 @@ export async function POST(request: NextRequest) {
       priority: priority || 'medium',
       columnId: columnId || 'backlog',
       epicId: epicId || null,
+      imageUrls: imageUrls ? JSON.stringify(imageUrls) : null,
     }).returning();
 
     // Send webhook notification

@@ -18,6 +18,7 @@ export interface Task {
   columnId: ColumnId;
   epicId?: string | null;
   prUrl?: string | null;
+  imageUrls?: string[];
   createdAt: number;
 }
 
