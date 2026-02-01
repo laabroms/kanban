@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Task, Priority, ColumnId, Epic } from '@/types';
+import { Task, TaskImage, Priority, ColumnId, Epic } from '@/types';
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null) => void;
+  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null, images?: TaskImage[] | null) => void;
   task?: Task | null;
   defaultColumnId?: ColumnId;
   epics?: Epic[];
@@ -19,9 +19,12 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const [priority, setPriority] = useState<Priority>('medium');
   const [epicId, setEpicId] = useState<string | null>(null);
   const [prUrl, setPrUrl] = useState('');
+  const [images, setImages] = useState<TaskImage[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when task changes or modal opens
   useEffect(() => {
@@ -31,14 +34,65 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
       setPriority(task.priority);
       setEpicId(task.epicId || null);
       setPrUrl(task.prUrl || '');
+      setImages(task.images || []);
     } else {
       setTitle('');
       setDescription('');
       setPriority('medium');
       setEpicId(defaultEpicId || null);
       setPrUrl('');
+      setImages([]);
     }
   }, [task, isOpen, defaultEpicId]);
+
+  // Handle file upload
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const newImages: TaskImage[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      // Only accept images
+      if (!file.type.startsWith('image/')) continue;
+      // Limit file size to 5MB
+      if (file.size > 5 * 1024 * 1024) continue;
+
+      try {
+        const base64 = await fileToBase64(file);
+        newImages.push({
+          id: crypto.randomUUID(),
+          data: base64,
+          name: file.name,
+          type: file.type,
+        });
+      } catch (err) {
+        console.error('Failed to read file:', err);
+      }
+    }
+
+    setImages(prev => [...prev, ...newImages]);
+    setIsUploading(false);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = (imageId: string) => {
+    setImages(prev => prev.filter(img => img.id !== imageId));
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
 
   // Focus title input when modal opens
   useEffect(() => {
@@ -104,7 +158,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null);
+    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null, images.length > 0 ? images : null);
     onClose();
   };
 
@@ -203,6 +257,69 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
                          text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="https://github.com/..."
             />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Images (optional)
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileUpload}
+              className="hidden"
+              id="image-upload"
+            />
+            <div className="space-y-2">
+              {/* Image previews */}
+              {images.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {images.map(img => (
+                    <div key={img.id} className="relative group">
+                      <img
+                        src={img.data}
+                        alt={img.name}
+                        className="w-20 h-20 object-cover rounded-lg border border-zinc-700"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(img.id)}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full
+                                   flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`Remove ${img.name}`}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Upload button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full py-2 px-3 border border-dashed border-zinc-600 rounded-lg
+                           text-zinc-400 hover:border-zinc-500 hover:text-zinc-300 transition-colors
+                           flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {isUploading ? (
+                  <span>Uploading...</span>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>Add Images</span>
+                  </>
+                )}
+              </button>
+              <p className="text-xs text-zinc-500">Max 5MB per image. Supports JPG, PNG, GIF.</p>
+            </div>
           </div>
           
           <fieldset>

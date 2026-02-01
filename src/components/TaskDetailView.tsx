@@ -219,6 +219,37 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
             </div>
           )}
 
+          {/* Images */}
+          {task.images && task.images.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-zinc-400 mb-2">
+                Attachments ({task.images.length})
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {task.images.map((img) => (
+                  <a
+                    key={img.id}
+                    href={img.data}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group relative aspect-square rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500 transition-colors"
+                  >
+                    <img
+                      src={img.data}
+                      alt={img.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Comments */}
           <div>
             <h3 className="text-sm font-medium text-zinc-400 mb-3">

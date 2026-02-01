@@ -10,6 +10,13 @@ export interface Epic {
   createdAt: number;
 }
 
+export interface TaskImage {
+  id: string;
+  data: string; // base64 encoded image
+  name: string;
+  type: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -18,6 +25,7 @@ export interface Task {
   columnId: ColumnId;
   epicId?: string | null;
   prUrl?: string | null;
+  images?: TaskImage[] | null;
   createdAt: number;
 }
 
