@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Task, ColumnId, Priority } from '@/types';
+import { Task, ColumnId, Priority, TaskImage } from '@/types';
 
 export function useTasks() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -15,16 +15,31 @@ export function useTasks() {
         const res = await fetch('/api/tasks');
         if (!res.ok) throw new Error('Failed to fetch tasks');
         const data = await res.json();
-        setTasks(data.map((t: Record<string, unknown>) => ({
-          id: t.id as string,
-          title: t.title as string,
-          description: t.description as string | undefined,
-          priority: t.priority as Priority,
-          columnId: t.columnId as ColumnId,
-          epicId: t.epicId as string | null | undefined,
-          prUrl: t.prUrl as string | null | undefined,
-          createdAt: new Date(t.createdAt as string).getTime(),
-        })));
+        setTasks(data.map((t: Record<string, unknown>) => {
+          // Parse images from JSON string if present
+          let images: TaskImage[] | undefined;
+          if (t.images && typeof t.images === 'string') {
+            try {
+              images = JSON.parse(t.images);
+            } catch {
+              images = undefined;
+            }
+          } else if (Array.isArray(t.images)) {
+            images = t.images;
+          }
+
+          return {
+            id: t.id as string,
+            title: t.title as string,
+            description: t.description as string | undefined,
+            priority: t.priority as Priority,
+            columnId: t.columnId as ColumnId,
+            epicId: t.epicId as string | null | undefined,
+            prUrl: t.prUrl as string | null | undefined,
+            images,
+            createdAt: new Date(t.createdAt as string).getTime(),
+          };
+        }));
       } catch (err) {
         console.error('Failed to fetch tasks:', err);
         setError('Failed to load tasks');
@@ -40,16 +55,31 @@ export function useTasks() {
     description: string,
     priority: Priority,
     columnId: ColumnId = 'backlog',
-    epicId?: string | null
+    epicId?: string | null,
+    prUrl?: string | null,
+    images?: TaskImage[]
   ) => {
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, priority, columnId, epicId }),
+        body: JSON.stringify({ title, description, priority, columnId, epicId, prUrl, images }),
       });
       if (!res.ok) throw new Error('Failed to create task');
       const newTask = await res.json();
+      
+      // Parse images if returned as string
+      let parsedImages: TaskImage[] | undefined;
+      if (newTask.images && typeof newTask.images === 'string') {
+        try {
+          parsedImages = JSON.parse(newTask.images);
+        } catch {
+          parsedImages = undefined;
+        }
+      } else if (Array.isArray(newTask.images)) {
+        parsedImages = newTask.images;
+      }
+
       setTasks(prev => [...prev, {
         id: newTask.id,
         title: newTask.title,
@@ -58,6 +88,7 @@ export function useTasks() {
         columnId: newTask.columnId,
         epicId: newTask.epicId,
         prUrl: newTask.prUrl,
+        images: parsedImages,
         createdAt: new Date(newTask.createdAt).getTime(),
       }]);
       return newTask;

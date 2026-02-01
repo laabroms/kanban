@@ -219,6 +219,34 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
             </div>
           )}
 
+          {/* Images */}
+          {task.images && task.images.length > 0 && (
+            <div>
+              <h3 className="text-sm font-medium text-zinc-400 mb-2">
+                Attachments ({task.images.length})
+              </h3>
+              <div className="grid grid-cols-2 gap-3">
+                {task.images.map((img) => (
+                  <a
+                    key={img.id}
+                    href={img.data}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block group"
+                  >
+                    <img
+                      src={img.data}
+                      alt={img.name}
+                      className="w-full h-32 object-cover rounded-lg border border-zinc-700 
+                                 group-hover:border-blue-500 transition-colors"
+                    />
+                    <p className="text-xs text-zinc-500 mt-1 truncate">{img.name}</p>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Comments */}
           <div>
             <h3 className="text-sm font-medium text-zinc-400 mb-3">

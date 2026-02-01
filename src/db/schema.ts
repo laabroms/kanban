@@ -19,6 +19,7 @@ export const tasks = pgTable('tasks', {
   columnId: text('column_id', { enum: ['backlog', 'in-progress', 'review', 'done'] }).notNull().default('backlog'),
   epicId: uuid('epic_id').references(() => epics.id, { onDelete: 'set null' }),
   prUrl: text('pr_url'), // Pull request URL
+  images: text('images'), // JSON array of base64 images
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
