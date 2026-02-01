@@ -127,26 +127,33 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
           continue;
         }
 
-        // Convert to base64
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
+        // Upload to Vercel Blob via API
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
         });
 
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`Failed to upload ${file.name}: ${error.error || 'Unknown error'}`);
+          continue;
+        }
+
+        const { url } = await response.json();
         newImages.push({
           id: crypto.randomUUID(),
           name: file.name,
-          type: file.type,
-          data: base64,
+          url,
         });
       }
 
       setImages([...images, ...newImages]);
     } catch (error) {
-      console.error('Error processing images:', error);
-      alert('Failed to process images');
+      console.error('Error uploading images:', error);
+      alert('Failed to upload images');
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -291,7 +298,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
                 {images.map(img => (
                   <div key={img.id} className="relative group">
                     <img
-                      src={img.data}
+                      src={img.url}
                       alt={img.name}
                       className="w-full h-20 object-cover rounded-lg border border-zinc-700"
                     />

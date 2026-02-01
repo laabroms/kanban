@@ -229,13 +229,13 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
                 {task.images.map((img) => (
                   <a
                     key={img.id}
-                    href={img.data}
+                    href={img.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block group"
                   >
                     <img
-                      src={img.data}
+                      src={img.url}
                       alt={img.name}
                       className="w-full h-32 object-cover rounded-lg border border-zinc-700 
                                  group-hover:border-blue-500 transition-colors"

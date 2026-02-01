@@ -5,8 +5,7 @@ export type ColumnId = 'backlog' | 'in-progress' | 'review' | 'done';
 export interface TaskImage {
   id: string;
   name: string;
-  type: string;
-  data: string; // base64 encoded
+  url: string; // Vercel Blob URL
 }
 
 export interface Epic {
