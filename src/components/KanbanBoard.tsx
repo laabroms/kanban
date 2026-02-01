@@ -32,6 +32,7 @@ export function KanbanBoard() {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [defaultColumnId, setDefaultColumnId] = useState<ColumnId>('backlog');
   const [selectedEpicId, setSelectedEpicId] = useState<string | null>(null);
+  const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -150,9 +151,20 @@ export function KanbanBoard() {
 
   return (
     <div className="min-h-screen bg-zinc-950 p-6 pt-16">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-zinc-100">Kanban Board</h1>
-        <p className="text-zinc-500 text-sm mt-1">Drag and drop to organize your tasks</p>
+      <header className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-100">Kanban Board</h1>
+          <p className="text-zinc-500 text-sm mt-1">Drag and drop to organize your tasks</p>
+        </div>
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={hideCompletedTasks}
+            onChange={(e) => setHideCompletedTasks(e.target.checked)}
+            className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-950 cursor-pointer"
+          />
+          <span className="text-sm text-zinc-400">Hide completed tasks</span>
+        </label>
       </header>
 
       <EpicSelector
@@ -186,7 +198,7 @@ export function KanbanBoard() {
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-4 overflow-x-auto pb-4">
-            {COLUMNS.map(column => (
+            {COLUMNS.filter(column => !hideCompletedTasks || column.id !== 'done').map(column => (
               <Column
                 key={column.id}
                 column={column}
