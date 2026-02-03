@@ -11,6 +11,7 @@ export interface TaskImage {
 export interface Epic {
   id: string;
   name: string;
+  description?: string | null;
   color: string;
   position: number;
   createdAt: number;

@@ -3,6 +3,7 @@ import { pgTable, text, timestamp, uuid, boolean, integer } from 'drizzle-orm/pg
 export const epics = pgTable('epics', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
+  description: text('description'), // Optional description for the epic
   color: text('color').notNull().default('#3b82f6'), // blue-500 default
   position: integer('position').notNull().default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),

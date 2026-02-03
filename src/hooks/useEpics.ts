@@ -17,6 +17,7 @@ export function useEpics() {
         setEpics(data.map((e: Record<string, unknown>) => ({
           id: e.id as string,
           name: e.name as string,
+          description: e.description as string | null | undefined,
           color: e.color as string,
           position: e.position as number,
           createdAt: new Date(e.createdAt as string).getTime(),
@@ -31,18 +32,19 @@ export function useEpics() {
     loadEpics();
   }, []);
 
-  const addEpic = useCallback(async (name: string, color: string) => {
+  const addEpic = useCallback(async (name: string, color: string, description?: string) => {
     try {
       const res = await fetch('/api/epics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color }),
+        body: JSON.stringify({ name, color, description }),
       });
       if (!res.ok) throw new Error('Failed to create epic');
       const newEpic = await res.json();
       setEpics(prev => [...prev, {
         id: newEpic.id,
         name: newEpic.name,
+        description: newEpic.description,
         color: newEpic.color,
         position: newEpic.position,
         createdAt: new Date(newEpic.createdAt).getTime(),

@@ -11,10 +11,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const db = getDb();
     const { id } = await params;
     const body = await request.json();
-    const { name, color, position } = body;
+    const { name, description, color, position } = body;
 
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
     if (color !== undefined) updateData.color = color;
     if (position !== undefined) updateData.position = position;
 

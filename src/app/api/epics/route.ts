@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const body = await request.json();
-    const { name, color } = body;
+    const { name, description, color } = body;
 
     if (!name) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
 
     const [newEpic] = await db.insert(epics).values({
       name,
+      description: description || null,
       color: color || '#3b82f6',
       position: maxPosition + 1,
     }).returning();
