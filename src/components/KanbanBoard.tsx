@@ -23,7 +23,7 @@ import { useToast } from './Toast';
 
 export function KanbanBoard() {
   const { tasks, isLoaded, addTask, updateTask, deleteTask, moveTask } = useTasks();
-  const { epics, isLoaded: epicsLoaded, addEpic, deleteEpic } = useEpics();
+  const { epics, isLoaded: epicsLoaded, addEpic, updateEpic, deleteEpic } = useEpics();
   const { showToast } = useToast();
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -172,12 +172,20 @@ export function KanbanBoard() {
         epics={epics}
         selectedEpicId={selectedEpicId}
         onSelect={setSelectedEpicId}
-        onAddEpic={async (name, color) => {
+        onAddEpic={async (name, color, description) => {
           try {
-            await addEpic(name, color);
+            await addEpic(name, color, description);
             showToast(`Epic "${name}" created`, 'success');
           } catch {
             showToast('Failed to create epic', 'error');
+          }
+        }}
+        onUpdateEpic={async (id, updates) => {
+          try {
+            await updateEpic(id, updates);
+            showToast('Epic updated', 'success');
+          } catch {
+            showToast('Failed to update epic', 'error');
           }
         }}
         onDeleteEpic={async (id) => {
