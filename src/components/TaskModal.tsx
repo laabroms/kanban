@@ -183,7 +183,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4"
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -191,9 +191,13 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
     >
       <div 
         ref={modalRef}
-        className="bg-zinc-900 rounded-xl border border-zinc-800 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto"
+        className="bg-zinc-900 rounded-t-xl sm:rounded-xl border-t sm:border border-zinc-800 w-full sm:max-w-md shadow-xl max-h-[85vh] sm:max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
+        {/* Mobile drag handle */}
+        <div className="sm:hidden flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 bg-zinc-700 rounded-full" />
+        </div>
         <div className="p-4 border-b border-zinc-800">
           <h2 id="modal-title" className="text-lg font-semibold text-zinc-100">
             {task ? 'Edit Task' : 'New Task'}

@@ -130,43 +130,56 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
 
   return (
     <div 
-      className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
       role="dialog"
       aria-modal="true"
     >
       <div 
         ref={modalRef}
-        className="bg-zinc-900 rounded-xl border border-zinc-800 w-full max-w-2xl shadow-xl max-h-[90vh] flex flex-col"
+        className="bg-zinc-900 rounded-t-xl sm:rounded-xl border-t sm:border border-zinc-800 w-full sm:max-w-2xl shadow-xl max-h-[85vh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200"
         onClick={e => e.stopPropagation()}
       >
+        {/* Mobile drag handle */}
+        <div className="sm:hidden flex justify-center pt-2 pb-1">
+          <div className="w-10 h-1 bg-zinc-700 rounded-full" />
+        </div>
         {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl font-semibold text-zinc-100 break-words">
+        <div className="p-4 border-b border-zinc-800">
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <h2 className="text-lg sm:text-xl font-semibold text-zinc-100 break-words flex-1">
               {task.title}
             </h2>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
-              <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
-                {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
-              </span>
-              <span className="px-2 py-0.5 rounded text-xs font-medium bg-zinc-700 text-zinc-300">
-                {column?.title}
-              </span>
-              {epic && (
-                <span 
-                  className="px-2 py-0.5 rounded text-xs font-medium"
-                  style={{ backgroundColor: `${epic.color}20`, color: epic.color }}
-                >
-                  {epic.name}
-                </span>
-              )}
-            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 text-zinc-400 hover:text-zinc-200 transition-colors shrink-0"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${priorityColors[task.priority]}`}>
+              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+            </span>
+            <span className="px-2 py-0.5 rounded text-xs font-medium bg-zinc-700 text-zinc-300">
+              {column?.title}
+            </span>
+            {epic && (
+              <span 
+                className="px-2 py-0.5 rounded text-xs font-medium"
+                style={{ backgroundColor: `${epic.color}20`, color: epic.color }}
+              >
+                {epic.name}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-3">
             <button
               onClick={onEdit}
-              className="px-3 py-1.5 text-sm font-medium rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-lg bg-zinc-800 text-zinc-300 hover:bg-zinc-700 active:bg-zinc-600 transition-colors"
             >
               Edit
             </button>
@@ -175,18 +188,9 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
                 onClose();
                 onDelete(task.id);
               }}
-              className="px-3 py-1.5 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-sm font-medium rounded-lg bg-red-900/30 text-red-400 hover:bg-red-900/50 active:bg-red-900/70 transition-colors"
             >
               Delete
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1.5 text-zinc-400 hover:text-zinc-200 transition-colors"
-              aria-label="Close"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
             </button>
           </div>
         </div>

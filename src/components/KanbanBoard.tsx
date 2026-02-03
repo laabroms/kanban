@@ -7,6 +7,7 @@ import {
   DragStartEvent,
   DragEndEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -38,6 +39,12 @@ export function KanbanBoard() {
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200, // Long press to start dragging on touch
+        tolerance: 5,
       },
     })
   );
@@ -151,11 +158,12 @@ export function KanbanBoard() {
     : null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-6 pt-16">
-      <header className="mb-6 flex items-start justify-between">
+    <div className="min-h-screen bg-zinc-950 p-3 sm:p-6 pt-14 sm:pt-16">
+      <header className="mb-4 sm:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Kanban Board</h1>
-          <p className="text-zinc-500 text-sm mt-1">Drag and drop to organize your tasks</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-zinc-100">Kanban Board</h1>
+          <p className="text-zinc-500 text-xs sm:text-sm mt-1 hidden sm:block">Drag and drop to organize your tasks</p>
+          <p className="text-zinc-500 text-xs mt-1 sm:hidden">Long-press to drag tasks</p>
         </div>
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input
@@ -164,7 +172,7 @@ export function KanbanBoard() {
             onChange={(e) => setHideCompletedTasks(e.target.checked)}
             className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-950 cursor-pointer"
           />
-          <span className="text-sm text-zinc-400">Hide completed tasks</span>
+          <span className="text-xs sm:text-sm text-zinc-400">Hide completed</span>
         </label>
       </header>
 
@@ -206,18 +214,19 @@ export function KanbanBoard() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex gap-4 overflow-x-auto pb-4">
+        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none scroll-smooth">
             {COLUMNS.filter(column => !hideCompletedTasks || column.id !== 'done').map(column => (
-              <Column
-                key={column.id}
-                column={column}
-                tasks={getTasksByColumn(column.id)}
-                epics={epics}
-                onViewTask={handleViewTask}
-                onEditTask={handleEditTask}
-                onDeleteTask={handleDeleteTask}
-                onAddTask={handleAddTask}
-              />
+              <div key={column.id} className="snap-start">
+                <Column
+                  column={column}
+                  tasks={getTasksByColumn(column.id)}
+                  epics={epics}
+                  onViewTask={handleViewTask}
+                  onEditTask={handleEditTask}
+                  onDeleteTask={handleDeleteTask}
+                  onAddTask={handleAddTask}
+                />
+              </div>
             ))}
         </div>
 
