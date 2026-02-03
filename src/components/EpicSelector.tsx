@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Epic } from '@/types';
 
 interface EpicSelectorProps {
@@ -33,6 +33,8 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
   const [editDescription, setEditDescription] = useState('');
   const [editColor, setEditColor] = useState('');
   const [showMenu, setShowMenu] = useState<string | null>(null);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const longPressTriggered = useRef(false);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +72,31 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
     setShowMenu(null);
   };
 
+  // Long press handlers for mobile
+  const handleTouchStart = (epicId: string) => {
+    longPressTriggered.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressTriggered.current = true;
+      setShowMenu(epicId);
+    }, 500);
+  };
+
+  const handleTouchEnd = () => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  };
+
+  const handleEpicClick = (epicId: string) => {
+    // Don't select if long press was triggered
+    if (longPressTriggered.current) {
+      longPressTriggered.current = false;
+      return;
+    }
+    onSelect(epicId);
+  };
+
   return (
     <div className="mb-6">
       <div className="flex items-center gap-2 flex-wrap">
@@ -89,11 +116,18 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
 
         {/* Epic tabs */}
         {epics.map(epic => (
-          <div key={epic.id} className="relative group">
+          <div key={epic.id} className="relative flex items-center">
             <button
-              onClick={() => onSelect(epic.id)}
+              onClick={() => handleEpicClick(epic.id)}
+              onTouchStart={() => handleTouchStart(epic.id)}
+              onTouchEnd={handleTouchEnd}
+              onTouchCancel={handleTouchEnd}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                setShowMenu(showMenu === epic.id ? null : epic.id);
+              }}
               className={`
-                px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2
+                pl-4 pr-8 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2
                 ${selectedEpicId === epic.id
                   ? 'text-white'
                   : 'bg-zinc-800/50 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
@@ -109,17 +143,22 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
               {epic.name}
             </button>
 
-            {/* Gear icon for menu */}
+            {/* Menu button - always visible */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowMenu(showMenu === epic.id ? null : epic.id);
               }}
-              className="absolute -right-1 -top-1 w-5 h-5 bg-zinc-700 rounded-full 
-                         text-zinc-400 hover:text-zinc-200 text-xs flex items-center justify-center
-                         opacity-0 group-hover:opacity-100 transition-opacity"
+              className={`
+                absolute right-1 w-6 h-6 rounded-full 
+                text-xs flex items-center justify-center transition-colors
+                ${selectedEpicId === epic.id
+                  ? 'text-white/70 hover:text-white hover:bg-white/20'
+                  : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-700'
+                }
+              `}
             >
-              ⚙
+              ⋮
             </button>
 
             {/* Context menu */}
@@ -129,16 +168,16 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
                   className="fixed inset-0 z-40"
                   onClick={() => setShowMenu(null)}
                 />
-                <div className="absolute top-full right-0 mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-50 py-1 min-w-[120px]">
+                <div className="absolute top-full right-0 mt-1 bg-zinc-800 border border-zinc-700 rounded-lg shadow-lg z-50 py-1 min-w-[140px]">
                   <button
                     onClick={() => handleStartEdit(epic)}
-                    className="w-full px-3 py-1.5 text-left text-sm text-zinc-300 hover:bg-zinc-700"
+                    className="w-full px-4 py-2 text-left text-sm text-zinc-300 hover:bg-zinc-700 flex items-center gap-2"
                   >
                     ✏️ Edit
                   </button>
                   <button
                     onClick={() => handleDelete(epic)}
-                    className="w-full px-3 py-1.5 text-left text-sm text-red-400 hover:bg-zinc-700"
+                    className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-zinc-700 flex items-center gap-2"
                   >
                     🗑️ Delete
                   </button>
@@ -180,7 +219,7 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
               className="px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm
                          text-zinc-100 focus:outline-none focus:border-blue-500 resize-none"
             />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm text-zinc-400">Color:</span>
               {COLORS.map(color => (
                 <button
@@ -250,7 +289,7 @@ export function EpicSelector({ epics, selectedEpicId, onSelect, onAddEpic, onUpd
               </div>
               <div>
                 <label className="block text-sm text-zinc-400 mb-2">Color</label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   {COLORS.map(color => (
                     <button
                       key={color}
