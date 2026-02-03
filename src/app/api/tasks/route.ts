@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { tasks } from '@/db/schema';
 import { sendWebhook } from '@/lib/webhook';
+import { validateRequest } from '@/lib/auth';
 
 // GET all tasks
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const allTasks = await db.select().from(tasks).orderBy(tasks.createdAt);
@@ -17,6 +21,9 @@ export async function GET() {
 
 // POST new task
 export async function POST(request: NextRequest) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const body = await request.json();

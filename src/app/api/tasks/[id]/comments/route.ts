@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { comments, tasks } from '@/db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { validateRequest } from '@/lib/auth';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 // GET all comments for a task
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const { id: taskId } = await params;
@@ -32,6 +36,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // POST create a new comment
 export async function POST(request: NextRequest, { params }: RouteParams) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const { id: taskId } = await params;

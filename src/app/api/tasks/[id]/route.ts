@@ -3,11 +3,15 @@ import { getDb } from '@/db';
 import { tasks } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendWebhook } from '@/lib/webhook';
+import { validateRequest } from '@/lib/auth';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 // GET single task
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const { id } = await params;
@@ -26,6 +30,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PATCH update task
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const { id } = await params;
@@ -76,6 +83,9 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 // DELETE task
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const db = getDb();
     const { id } = await params;

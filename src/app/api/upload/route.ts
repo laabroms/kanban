@@ -1,7 +1,11 @@
 import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
+import { validateRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
+  const auth = await validateRequest(request);
+  if (!auth.valid) return auth.error!;
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
