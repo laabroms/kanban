@@ -3,11 +3,16 @@ import { getDb } from '@/db';
 import { tasks } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { sendWebhook } from '@/lib/webhook';
+import { verifyApiToken, unauthorizedResponse } from '@/lib/apiAuth';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 // GET single task
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  if (!verifyApiToken(request)) {
+    return unauthorizedResponse();
+  }
+  
   try {
     const db = getDb();
     const { id } = await params;
@@ -26,6 +31,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 // PATCH update task
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
+  if (!verifyApiToken(request)) {
+    return unauthorizedResponse();
+  }
+  
   try {
     const db = getDb();
     const { id } = await params;
@@ -75,6 +84,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
 // DELETE task
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
+  if (!verifyApiToken(request)) {
+    return unauthorizedResponse();
+  }
+  
   try {
     const db = getDb();
     const { id } = await params;

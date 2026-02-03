@@ -2,9 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { tasks } from '@/db/schema';
 import { sendWebhook } from '@/lib/webhook';
+import { verifyApiToken, unauthorizedResponse } from '@/lib/apiAuth';
 
 // GET all tasks
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!verifyApiToken(request)) {
+    return unauthorizedResponse();
+  }
+  
   try {
     const db = getDb();
     const allTasks = await db.select().from(tasks).orderBy(tasks.createdAt);
@@ -17,6 +22,10 @@ export async function GET() {
 
 // POST new task
 export async function POST(request: NextRequest) {
+  if (!verifyApiToken(request)) {
+    return unauthorizedResponse();
+  }
+  
   try {
     const db = getDb();
     const body = await request.json();
