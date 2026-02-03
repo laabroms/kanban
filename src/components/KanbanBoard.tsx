@@ -11,7 +11,7 @@ import {
   useSensors,
   closestCorners,
 } from '@dnd-kit/core';
-import { COLUMNS, Task, ColumnId, Priority, Epic } from '@/types';
+import { COLUMNS, Task, ColumnId, Priority, Epic, TaskImage } from '@/types';
 import { useTasks } from '@/hooks/useTasks';
 import { useEpics } from '@/hooks/useEpics';
 import { Column } from './Column';
@@ -120,15 +120,16 @@ export function KanbanBoard() {
     priority: Priority,
     columnId?: ColumnId,
     epicId?: string | null,
-    prUrl?: string | null
+    prUrl?: string | null,
+    images?: TaskImage[]
   ) => {
     try {
       if (editingTask) {
-        await updateTask(editingTask.id, { title, description, priority, epicId, prUrl });
+        await updateTask(editingTask.id, { title, description, priority, epicId, prUrl, images });
         showToast('Task updated', 'success');
       } else {
         const taskEpicId = epicId !== undefined ? epicId : selectedEpicId;
-        await addTask(title, description, priority, columnId || 'backlog', taskEpicId);
+        await addTask(title, description, priority, columnId || 'backlog', taskEpicId, prUrl, images);
         showToast('Task created', 'success');
       }
     } catch {

@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Task, Priority, ColumnId, Epic } from '@/types';
+import { Task, Priority, ColumnId, Epic, TaskImage } from '@/types';
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null) => void;
+  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null, images?: TaskImage[]) => void;
   task?: Task | null;
   defaultColumnId?: ColumnId;
   epics?: Epic[];
@@ -19,9 +19,12 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const [priority, setPriority] = useState<Priority>('medium');
   const [epicId, setEpicId] = useState<string | null>(null);
   const [prUrl, setPrUrl] = useState('');
+  const [images, setImages] = useState<TaskImage[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Reset form when task changes or modal opens
   useEffect(() => {
@@ -31,12 +34,14 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
       setPriority(task.priority);
       setEpicId(task.epicId || null);
       setPrUrl(task.prUrl || '');
+      setImages(task.images || []);
     } else {
       setTitle('');
       setDescription('');
       setPriority('medium');
       setEpicId(defaultEpicId || null);
       setPrUrl('');
+      setImages([]);
     }
   }, [task, isOpen, defaultEpicId]);
 
@@ -101,10 +106,70 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
 
   if (!isOpen) return null;
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsUploading(true);
+    const newImages: TaskImage[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          alert(`${file.name} is not an image file`);
+          continue;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert(`${file.name} is too large (max 5MB)`);
+          continue;
+        }
+
+        // Upload to Vercel Blob via API
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          alert(`Failed to upload ${file.name}: ${error.error || 'Unknown error'}`);
+          continue;
+        }
+
+        const { url } = await response.json();
+        newImages.push({
+          id: crypto.randomUUID(),
+          name: file.name,
+          url,
+        });
+      }
+
+      setImages([...images, ...newImages]);
+    } catch (error) {
+      console.error('Error uploading images:', error);
+      alert('Failed to upload images');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = (idToRemove: string) => {
+    setImages(images.filter(img => img.id !== idToRemove));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null);
+    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null, images);
     onClose();
   };
 
@@ -126,7 +191,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
     >
       <div 
         ref={modalRef}
-        className="bg-zinc-900 rounded-xl border border-zinc-800 w-full max-w-md shadow-xl"
+        className="bg-zinc-900 rounded-xl border border-zinc-800 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <div className="p-4 border-b border-zinc-800">
@@ -204,6 +269,53 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
               placeholder="https://github.com/..."
             />
           </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm text-zinc-400 mb-1">
+              Images (optional)
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFileChange}
+              disabled={isUploading}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2
+                         text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                         file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0
+                         file:bg-zinc-700 file:text-zinc-300 file:text-sm file:cursor-pointer
+                         disabled:opacity-50"
+            />
+            {isUploading && (
+              <p className="text-sm text-zinc-500 mt-1">Processing images...</p>
+            )}
+            
+            {/* Image Previews */}
+            {images.length > 0 && (
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {images.map(img => (
+                  <div key={img.id} className="relative group">
+                    <img
+                      src={img.url}
+                      alt={img.name}
+                      className="w-full h-20 object-cover rounded-lg border border-zinc-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(img.id)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full
+                                 text-white text-xs flex items-center justify-center
+                                 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           
           <fieldset>
             <legend className="block text-sm text-zinc-400 mb-2">Priority</legend>
@@ -246,7 +358,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
             </button>
             <button
               type="submit"
-              disabled={!title.trim()}
+              disabled={!title.trim() || isUploading}
               className="flex-1 py-2 rounded-lg text-sm font-medium
                          bg-blue-600 text-white hover:bg-blue-500 transition-colors
                          disabled:opacity-50 disabled:cursor-not-allowed

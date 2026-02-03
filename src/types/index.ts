@@ -2,6 +2,12 @@ export type Priority = 'low' | 'medium' | 'high';
 
 export type ColumnId = 'backlog' | 'in-progress' | 'review' | 'done';
 
+export interface TaskImage {
+  id: string;
+  name: string;
+  url: string; // Vercel Blob URL
+}
+
 export interface Epic {
   id: string;
   name: string;
@@ -18,6 +24,7 @@ export interface Task {
   columnId: ColumnId;
   epicId?: string | null;
   prUrl?: string | null;
+  images?: TaskImage[];
   createdAt: number;
 }
 
