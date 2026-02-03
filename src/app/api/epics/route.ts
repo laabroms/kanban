@@ -2,13 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { epics } from '@/db/schema';
 import { asc } from 'drizzle-orm';
-import { validateRequest } from '@/lib/auth';
 
 // GET all epics
 export async function GET(request: NextRequest) {
-  const auth = await validateRequest(request);
-  if (!auth.valid) return auth.error!;
-
   try {
     const db = getDb();
     const allEpics = await db.select().from(epics).orderBy(asc(epics.position), asc(epics.createdAt));
@@ -21,9 +17,6 @@ export async function GET(request: NextRequest) {
 
 // POST new epic
 export async function POST(request: NextRequest) {
-  const auth = await validateRequest(request);
-  if (!auth.valid) return auth.error!;
-
   try {
     const db = getDb();
     const body = await request.json();
