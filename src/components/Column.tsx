@@ -32,7 +32,7 @@ export function Column({ column, tasks, epics = [], onViewTask, onEditTask, onDe
       className={`
         flex flex-col bg-zinc-900 rounded-lg border border-zinc-800
         border-t-2 ${columnColors[column.id]}
-        min-h-[500px] w-72 shrink-0
+        min-h-[400px] sm:min-h-[500px] w-[280px] sm:w-72 shrink-0
       `}
     >
       <div className="p-3 border-b border-zinc-800">

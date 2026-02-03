@@ -87,10 +87,11 @@ export function TaskCard({ task, onView, onEdit, onDelete, epics = [] }: TaskCar
       ref={setNodeRef}
       style={style}
       className={`
-        bg-zinc-800 rounded-lg p-3 border border-zinc-700
-        hover:border-zinc-600 transition-colors
-        ${isDragEnabled ? 'cursor-grabbing' : 'cursor-pointer'}
-        ${isDragging ? 'opacity-50 shadow-xl' : ''}
+        bg-zinc-800 rounded-lg p-3 sm:p-3 border border-zinc-700
+        hover:border-zinc-600 active:border-zinc-500 transition-colors
+        touch-manipulation select-none
+        ${isDragEnabled ? 'cursor-grabbing scale-105' : 'cursor-pointer'}
+        ${isDragging ? 'opacity-50 shadow-xl scale-105' : ''}
       `}
       {...attributes}
       {...(isDragEnabled ? listeners : {})}
