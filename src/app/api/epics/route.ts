@@ -4,7 +4,7 @@ import { epics } from '@/db/schema';
 import { asc } from 'drizzle-orm';
 
 // GET all epics
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const db = getDb();
     const allEpics = await db.select().from(epics).orderBy(asc(epics.position), asc(epics.createdAt));

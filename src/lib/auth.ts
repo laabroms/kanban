@@ -1,9 +1,66 @@
 import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/db';
 import { passcodes, sessions } from '@/db/schema';
 import { eq, and, gt } from 'drizzle-orm';
 
 const SESSION_COOKIE = 'kanban_session';
+
+// API token validation for external API access
+export function validateApiToken(request: NextRequest): { valid: boolean; error?: NextResponse } {
+  const apiToken = process.env.API_AUTH_TOKEN;
+  
+  // If no token is configured, allow all requests (dev mode)
+  if (!apiToken) {
+    return { valid: true };
+  }
+  
+  // Check Authorization header (Bearer token)
+  const authHeader = request.headers.get('authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (token === apiToken) {
+      return { valid: true };
+    }
+  }
+  
+  // Check x-api-token header
+  const xApiToken = request.headers.get('x-api-token');
+  if (xApiToken === apiToken) {
+    return { valid: true };
+  }
+  
+  return {
+    valid: false,
+    error: NextResponse.json(
+      { error: 'Unauthorized - Invalid or missing API token' },
+      { status: 401 }
+    ),
+  };
+}
+
+// Validate request - checks either session cookie OR API token
+export async function validateRequest(request: NextRequest): Promise<{ valid: boolean; error?: NextResponse }> {
+  // First check API token (for external API calls)
+  const tokenCheck = validateApiToken(request);
+  if (tokenCheck.valid) {
+    return { valid: true };
+  }
+  
+  // Fall back to session cookie check (for frontend)
+  const session = await getSession();
+  if (session?.authenticated) {
+    return { valid: true };
+  }
+  
+  return {
+    valid: false,
+    error: NextResponse.json(
+      { error: 'Unauthorized - Please provide a valid API token or login' },
+      { status: 401 }
+    ),
+  };
+}
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Simple hash function for passcodes (in production, use bcrypt)

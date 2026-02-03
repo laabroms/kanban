@@ -4,7 +4,7 @@ import { tasks } from '@/db/schema';
 import { sendWebhook } from '@/lib/webhook';
 
 // GET all tasks
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const db = getDb();
     const allTasks = await db.select().from(tasks).orderBy(tasks.createdAt);
