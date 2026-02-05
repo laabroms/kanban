@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const body = await request.json();
-    const { title, description, priority, columnId, epicId, prUrl, images } = body;
+    const { title, description, priority, columnId, epicId, prUrl, images, dueDate } = body;
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       epicId: epicId || null,
       prUrl: prUrl || null,
       images: images ? JSON.stringify(images) : null,
+      dueDate: dueDate ? new Date(dueDate) : null,
     }).returning();
 
     // Send webhook notification

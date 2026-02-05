@@ -21,6 +21,7 @@ export const tasks = pgTable('tasks', {
   epicId: uuid('epic_id').references(() => epics.id, { onDelete: 'set null' }),
   prUrl: text('pr_url'), // Pull request URL
   images: text('images'), // JSON array of image objects [{id, name, url}] - URLs from Vercel Blob
+  dueDate: timestamp('due_date'), // Optional due date for the task
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

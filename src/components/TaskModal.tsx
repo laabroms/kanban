@@ -6,7 +6,7 @@ import { Task, Priority, ColumnId, Epic, TaskImage } from '@/types';
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null, images?: TaskImage[]) => void;
+  onSave: (title: string, description: string, priority: Priority, columnId?: ColumnId, epicId?: string | null, prUrl?: string | null, images?: TaskImage[], dueDate?: string | null) => void;
   task?: Task | null;
   defaultColumnId?: ColumnId;
   epics?: Epic[];
@@ -20,6 +20,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const [epicId, setEpicId] = useState<string | null>(null);
   const [prUrl, setPrUrl] = useState('');
   const [images, setImages] = useState<TaskImage[]>([]);
+  const [dueDate, setDueDate] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   
   const modalRef = useRef<HTMLDivElement>(null);
@@ -35,6 +36,8 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
       setEpicId(task.epicId || null);
       setPrUrl(task.prUrl || '');
       setImages(task.images || []);
+      // Format date for input (YYYY-MM-DD)
+      setDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
     } else {
       setTitle('');
       setDescription('');
@@ -42,6 +45,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
       setEpicId(defaultEpicId || null);
       setPrUrl('');
       setImages([]);
+      setDueDate('');
     }
   }, [task, isOpen, defaultEpicId]);
 
@@ -169,7 +173,7 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null, images);
+    onSave(title.trim(), description.trim(), priority, defaultColumnId, epicId, prUrl.trim() || null, images, dueDate || null);
     onClose();
   };
 
@@ -271,6 +275,21 @@ export function TaskModal({ isOpen, onClose, onSave, task, defaultColumnId, epic
               className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2
                          text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               placeholder="https://github.com/..."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="task-due-date" className="block text-sm text-zinc-400 mb-1">
+              Due Date (optional)
+            </label>
+            <input
+              id="task-due-date"
+              type="date"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2
+                         text-zinc-100 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+                         [&::-webkit-calendar-picker-indicator]:invert"
             />
           </div>
 

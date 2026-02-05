@@ -26,6 +26,7 @@ export interface Task {
   epicId?: string | null;
   prUrl?: string | null;
   images?: TaskImage[];
+  dueDate?: string | null; // ISO date string
   createdAt: number;
 }
 

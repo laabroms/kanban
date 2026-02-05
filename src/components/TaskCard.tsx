@@ -27,8 +27,30 @@ const priorityLabels: Record<Priority, string> = {
 
 const LONG_PRESS_DURATION = 200; // milliseconds
 
+// Helper to check due date status
+function getDueDateStatus(dueDate: string | null | undefined): { isOverdue: boolean; isDueSoon: boolean; label: string } | null {
+  if (!dueDate) return null;
+  
+  const due = new Date(dueDate);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+  
+  const diffDays = Math.ceil((dueDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  
+  const label = due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  
+  if (diffDays < 0) {
+    return { isOverdue: true, isDueSoon: false, label };
+  } else if (diffDays <= 2) {
+    return { isOverdue: false, isDueSoon: true, label };
+  }
+  return { isOverdue: false, isDueSoon: false, label };
+}
+
 export function TaskCard({ task, onView, onEdit, onDelete, epics = [] }: TaskCardProps) {
   const epic = task.epicId ? epics.find(e => e.id === task.epicId) : null;
+  const dueDateStatus = task.columnId !== 'done' ? getDueDateStatus(task.dueDate) : null;
   const [isDragEnabled, setIsDragEnabled] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -139,6 +161,23 @@ export function TaskCard({ task, onView, onEdit, onDelete, epics = [] }: TaskCar
             </svg>
             PR
           </a>
+        )}
+        {dueDateStatus && (
+          <span
+            className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
+              dueDateStatus.isOverdue
+                ? 'bg-red-500/20 text-red-400 border-red-500/40'
+                : dueDateStatus.isDueSoon
+                ? 'bg-orange-500/20 text-orange-400 border-orange-500/40'
+                : 'bg-zinc-700/50 text-zinc-400 border-zinc-600/40'
+            }`}
+            title={dueDateStatus.isOverdue ? 'Overdue' : dueDateStatus.isDueSoon ? 'Due soon' : 'Due date'}
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {dueDateStatus.label}
+          </span>
         )}
       </div>
       

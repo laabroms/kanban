@@ -37,6 +37,7 @@ export function useTasks() {
             epicId: t.epicId as string | null | undefined,
             prUrl: t.prUrl as string | null | undefined,
             images,
+            dueDate: t.dueDate ? (t.dueDate as string) : null,
             createdAt: new Date(t.createdAt as string).getTime(),
           };
         }));
@@ -57,13 +58,14 @@ export function useTasks() {
     columnId: ColumnId = 'backlog',
     epicId?: string | null,
     prUrl?: string | null,
-    images?: TaskImage[]
+    images?: TaskImage[],
+    dueDate?: string | null
   ) => {
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, description, priority, columnId, epicId, prUrl, images }),
+        body: JSON.stringify({ title, description, priority, columnId, epicId, prUrl, images, dueDate }),
       });
       if (!res.ok) throw new Error('Failed to create task');
       const newTask = await res.json();
@@ -89,6 +91,7 @@ export function useTasks() {
         epicId: newTask.epicId,
         prUrl: newTask.prUrl,
         images: parsedImages,
+        dueDate: newTask.dueDate || null,
         createdAt: new Date(newTask.createdAt).getTime(),
       }]);
       return newTask;
