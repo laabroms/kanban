@@ -223,6 +223,42 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
             </div>
           )}
 
+          {/* Due Date */}
+          {task.dueDate && (
+            <div>
+              <h3 className="text-sm font-medium text-zinc-400 mb-2">Due Date</h3>
+              {(() => {
+                const due = new Date(task.dueDate);
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate());
+                const diffDays = Math.ceil((dueDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                const isOverdue = diffDays < 0 && task.columnId !== 'done';
+                const isDueSoon = diffDays >= 0 && diffDays <= 2 && task.columnId !== 'done';
+                
+                return (
+                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                    isOverdue 
+                      ? 'bg-red-500/20 text-red-400' 
+                      : isDueSoon 
+                      ? 'bg-orange-500/20 text-orange-400'
+                      : 'bg-zinc-800 text-zinc-300'
+                  }`}>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span>
+                      {due.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                      {isOverdue && ' (Overdue)'}
+                      {isDueSoon && diffDays === 0 && ' (Today)'}
+                      {isDueSoon && diffDays === 1 && ' (Tomorrow)'}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
           {/* Images */}
           {task.images && task.images.length > 0 && (
             <div>

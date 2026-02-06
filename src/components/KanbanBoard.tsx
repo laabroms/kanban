@@ -128,15 +128,16 @@ export function KanbanBoard() {
     columnId?: ColumnId,
     epicId?: string | null,
     prUrl?: string | null,
-    images?: TaskImage[]
+    images?: TaskImage[],
+    dueDate?: string | null
   ) => {
     try {
       if (editingTask) {
-        await updateTask(editingTask.id, { title, description, priority, epicId, prUrl, images });
+        await updateTask(editingTask.id, { title, description, priority, epicId, prUrl, images, dueDate });
         showToast('Task updated', 'success');
       } else {
         const taskEpicId = epicId !== undefined ? epicId : selectedEpicId;
-        await addTask(title, description, priority, columnId || 'backlog', taskEpicId, prUrl, images);
+        await addTask(title, description, priority, columnId || 'backlog', taskEpicId, prUrl, images, dueDate);
         showToast('Task created', 'success');
       }
     } catch {
