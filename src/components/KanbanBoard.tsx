@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
   DragStartEvent,
   DragEndEvent,
+  DragCancelEvent,
   PointerSensor,
   TouchSensor,
   useSensor,
@@ -34,6 +35,9 @@ export function KanbanBoard() {
   const [defaultColumnId, setDefaultColumnId] = useState<ColumnId>('backlog');
   const [selectedEpicId, setSelectedEpicId] = useState<string | null>(null);
   const [hideCompletedTasks, setHideCompletedTasks] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const boardRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -49,6 +53,19 @@ export function KanbanBoard() {
     })
   );
 
+  // Prevent scrolling on board when dragging
+  useEffect(() => {
+    if (!boardRef.current) return;
+    
+    if (isDragging) {
+      boardRef.current.style.overflow = 'hidden';
+      boardRef.current.style.touchAction = 'none';
+    } else {
+      boardRef.current.style.overflow = '';
+      boardRef.current.style.touchAction = '';
+    }
+  }, [isDragging]);
+
   // Filter tasks by selected epic
   const getTasksByColumn = useCallback((columnId: ColumnId) => {
     return tasks.filter(task => {
@@ -60,12 +77,16 @@ export function KanbanBoard() {
 
   const handleDragStart = (event: DragStartEvent) => {
     const task = tasks.find(t => t.id === event.active.id);
-    if (task) setActiveTask(task);
+    if (task) {
+      setActiveTask(task);
+      setIsDragging(true);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveTask(null);
+    setIsDragging(false);
 
     if (!over) return;
 
@@ -84,6 +105,11 @@ export function KanbanBoard() {
     if (overTask && overTask.columnId) {
       moveTask(taskId, overTask.columnId);
     }
+  };
+
+  const handleDragCancel = (event: DragCancelEvent) => {
+    setActiveTask(null);
+    setIsDragging(false);
   };
 
   const handleAddTask = (columnId: string) => {
@@ -214,8 +240,12 @@ export function KanbanBoard() {
         collisionDetection={closestCorners}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
-        <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none scroll-smooth">
+        <div 
+          ref={boardRef}
+          className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 -mx-3 px-3 sm:mx-0 sm:px-0 snap-x snap-mandatory sm:snap-none scroll-smooth"
+        >
             {COLUMNS.filter(column => !hideCompletedTasks || column.id !== 'done').map(column => (
               <div key={column.id} className="snap-start">
                 <Column

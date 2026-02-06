@@ -99,15 +99,27 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
 
+  // Lock body scroll and prevent touch scrolling on backdrop
   useEffect(() => {
     if (isOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      
+      // Lock body scroll
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      
+      return () => {
+        // Restore scroll position
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen || !task) return null;
@@ -132,6 +144,12 @@ export function TaskDetailView({ isOpen, onClose, onEdit, onDelete, task, epic }
     <div 
       className="fixed inset-0 bg-black/60 flex items-end sm:items-center justify-center z-50 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
+      onTouchMove={(e) => {
+        // Prevent background scrolling on mobile when touching backdrop
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
       role="dialog"
       aria-modal="true"
     >
